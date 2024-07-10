@@ -69,11 +69,11 @@ class AididHousePipeline:
 class SaveToMySQLPipeline:
     def __init__(self):
         self.conn = mysql.connector.connect(
-            host=config.get('mysql', 'host'),
-            username=config.get('mysql', 'username'),
-            password=config.get('mysql', 'password'),
-            database=config.get('mysql', 'database'),
-            port=config.get('mysql', 'port'),
+            host='aidid-db-mysql-do-user-17150710-0.b.db.ondigitalocean.com',
+            user='doadmin',
+            password='AVNS_ud7zyZ3uVcDGyuLNRmz',
+            database='defaultdb',
+            port=25060
         )
 
         self.cur = self.conn.cursor()
