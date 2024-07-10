@@ -1,4 +1,4 @@
 scrapy
-mysql
 mysql-connector-python
 configparser
+scrapeops-scrapy
