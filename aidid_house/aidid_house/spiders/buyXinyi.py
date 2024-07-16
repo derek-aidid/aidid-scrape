@@ -1,6 +1,7 @@
 import scrapy
 from aidid_house.items import AididHouseItem
 import re
+import json
 
 class BuyxinyiSpider(scrapy.Spider):
     name = "buyXinyi"
@@ -38,12 +39,26 @@ class BuyxinyiSpider(scrapy.Spider):
 
     def parse_case_page(self, response):
         name = response.xpath('//span[@class="buy-content-title-name"]/text()').get()
+        city_names = [
+            "臺北市", "台北市", "新北市", "桃園市", "臺中市", "台中市", "臺南市", "台南市", "高雄市",
+            "基隆市", "新竹市", "嘉義市", "宜蘭縣", "新竹縣", "苗栗縣", "彰化縣", "南投縣", "雲林縣",
+            "嘉義縣", "屏東縣", "花蓮縣", "臺東縣", "澎湖縣"
+        ]
+
+        # Create a set of the first two characters of each city name
+        city_substrings = {city[:2] for city in city_names}
+
+        # Remove any city substrings from the name
+        for substring in city_substrings:
+            if substring in name:
+                name = name.replace(substring, '').strip()
+
         address = response.xpath('//span[@class="buy-content-title-address"]/text()').get()
 
         city_district_match = re.search(r'(\w+(?:市|縣))(\w+(?:區|鄉|鎮|市|鄉))', address)
         city = city_district_match.group(1) if city_district_match else '無'
         district = city_district_match.group(2) if city_district_match else '無'
-
+        address = address.replace(city, '').replace(district, '').strip()
 
         price = ''.join(response.xpath('//div[@class="buy-content-title-total-price"]/text()').getall())
         space = ' '.join(response.xpath('//div[@class="buy-content-detail-area"]/div/div/span/text()').getall())
@@ -66,10 +81,11 @@ class BuyxinyiSpider(scrapy.Spider):
                 except Exception as e:
                     continue
         basic_info_list = [f"{key}: {value}" for key, value in basic_info_dict.items()]
+        basic_info_str = ' | '.join(basic_info_list)
 
         features = response.xpath('//div[@class="buy-content-obj-feature"]//div[@class="description-cell-text"]/text()').getall()
         tags = ' | '.join(response.xpath('//div[@class="tags-cell"]/text()').getall()).strip()
-
+        features_str = ' | '.join(features)
         neighbor_history = []
         neighbor_history_rows = response.xpath(
             '//div[@id="trade-table-list-buyTradeBodyLg"]/div/div[contains(@class, "trade-obj-card-web")]')
@@ -91,10 +107,50 @@ class BuyxinyiSpider(scrapy.Spider):
             }
             if neighbor_data['address'] != '':
                 neighbor_history.append(neighbor_data)
+
+        script_text = response.xpath('//script[contains(text(), "__NEXT_DATA__")]/text()').get()
+        json_data = json.loads(re.search(r'__NEXT_DATA__\s*=\s*({.*?});', script_text).group(1))
+        lat = json_data['props']['initialReduxState']['buyReducer']['contentData']['latitude']
+        lon = json_data['props']['initialReduxState']['buyReducer']['contentData']['longitude']
+
+        # Extract lifeInfo data
+        life_info = json_data['props']['initialReduxState']['buyReducer']['detailData']['lifeInfo']
+
+        # Flatten and format lifeInfo data
+        life_info_str = ' || '.join(
+            f"type: {info['type']} - " + ' | '.join(
+                f"title: {i['title']}, distance: {i['distance']}, time: {i['time']}, "
+                f"lifeLatitude: {i['lifeLatitude']}, lifeLongitude: {i['lifeLongitude']}"
+                for i in info['info']
+            )
+            for info in life_info
+        )
+
+        # Extract utilitylifeInfo data
+        utility_life_info = json_data['props']['initialReduxState']['buyReducer']['detailData']['utilitylifeInfo']
+
+        # Flatten and format utilitylifeInfo data
+        utility_life_info_str = ' || '.join(
+            f"utilityType: {info['utilityType']} - " + ' | '.join(
+                f"utilitySubType: {poi['utilitySubType']}, totalCount: {poi['totalCount']}, " +
+                ' | '.join(
+                    f"title: {p['title']}, distance: {p['distance']}, time: {p['time']}, "
+                    f"poiLatitude: {p['poiLatitude']}, poiLongitude: {p['poiLongitude']}"
+                    for p in poi['pois']
+                )
+                for poi in info['poiList']
+            )
+            for info in utility_life_info
+        )
+
+        # Now utility_life_info_str contains the formatted string
+
         item = AididHouseItem(
             url=response.url,
             name=name,
             address=address,
+            latitude=lat,
+            longitude=lon,
             city=city,
             district=district,
             price=price,
@@ -103,9 +159,12 @@ class BuyxinyiSpider(scrapy.Spider):
             space=space,
             floors=floors,
             community=community,
-            basic_info=basic_info_list,
-            features=features,
+            basic_info=basic_info_str,
+            features=features_str,
+            life_info=life_info_str,
+            utility_info=utility_life_info_str,
             review=tags,
             images=images,
         )
+
         yield item

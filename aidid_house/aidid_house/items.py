@@ -11,6 +11,8 @@ class AididHouseItem(scrapy.Item):
     url = scrapy.Field()
     name = scrapy.Field()
     address = scrapy.Field()
+    longitude = scrapy.Field()
+    latitude = scrapy.Field()
     city = scrapy.Field()
     district = scrapy.Field()
     price = scrapy.Field()
@@ -21,5 +23,8 @@ class AididHouseItem(scrapy.Item):
     community = scrapy.Field()
     basic_info = scrapy.Field()
     features = scrapy.Field()
+    life_info = scrapy.Field()
+    utility_info = scrapy.Field()
     review = scrapy.Field()
     images = scrapy.Field()
+

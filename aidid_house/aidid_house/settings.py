@@ -74,7 +74,7 @@ EXTENSIONS = {
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "aidid_house.pipelines.AididHousePipeline": 300,
-   'aidid_house.pipelines.SaveToMySQLPipeline': 400,
+   # 'aidid_house.pipelines.SaveToMySQLPipeline': 400,
 }
 
 
