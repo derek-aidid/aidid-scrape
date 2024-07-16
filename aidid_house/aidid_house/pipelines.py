@@ -66,6 +66,7 @@ class AididHousePipeline:
 
         return item
 
+
 class SaveToMySQLPipeline:
     def __init__(self):
         self.conn = mysql.connector.connect(
@@ -75,24 +76,32 @@ class SaveToMySQLPipeline:
             database='defaultdb',
             port=25060
         )
-
         self.cur = self.conn.cursor()
-        self.cur.execute("""
-        CREATE TABLE IF NOT EXISTS houses(
+
+        # Generate table name based on the current date
+        self.table_name = f"houses_{datetime.now().strftime('%m_%d_%Y')}"
+
+        # Create the table if it does not exist
+        self.cur.execute(f"""
+        CREATE TABLE IF NOT EXISTS {self.table_name} (
             id INT NOT NULL AUTO_INCREMENT,
             url VARCHAR(255),
             name TEXT,
             address VARCHAR(255),
+            longitude FLOAT,
+            latitude FLOAT,
             city VARCHAR(255),
             district VARCHAR(255),
             price INT,
+            space FLOAT,
             layout VARCHAR(255),
             house_type FLOAT,
-            space FLOAT,
             floors VARCHAR(255),
             community VARCHAR(255),
-            basic_info JSON,
-            features JSON,
+            basic_info TEXT,
+            features TEXT,
+            life_info TEXT,
+            utility_info TEXT,
             review TEXT,
             images JSON,
             PRIMARY KEY (id)
@@ -101,40 +110,48 @@ class SaveToMySQLPipeline:
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
-        self.cur.execute("""
-        INSERT INTO houses (
+        self.cur.execute(f"""
+        INSERT INTO {self.table_name} (
             url, 
             name, 
-            address, 
+            address,
+            longitude,
+            latitude,
             city, 
             district, 
             price, 
+            space,
             layout, 
             house_type,
-            space,
             floors,
             community,
             basic_info,
             features,
+            life_info,
+            utility_info,
             review,
             images
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
         """, (
             adapter.get('url'),
             adapter.get('name'),
             adapter.get('address'),
+            adapter.get('longitude'),
+            adapter.get('latitude'),
             adapter.get('city'),
             adapter.get('district'),
             adapter.get('price'),
+            adapter.get('space'),
             adapter.get('layout'),
             adapter.get('house_type'),
-            adapter.get('space'),
             adapter.get('floors'),
             adapter.get('community'),
             json.dumps(adapter.get('basic_info')),
             json.dumps(adapter.get('features')),
+            adapter.get('life_info'),
+            adapter.get('utility_info'),
             adapter.get('review'),
             json.dumps(adapter.get('images'))
         ))
