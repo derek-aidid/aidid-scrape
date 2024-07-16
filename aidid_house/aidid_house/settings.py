@@ -50,9 +50,9 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    "aidid_house.middlewares.AididHouseSpiderMiddleware": 543,
-#}
+SPIDER_MIDDLEWARES = {
+   "aidid_house.middlewares.AididHouseSpiderMiddleware": 543,
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -74,7 +74,7 @@ EXTENSIONS = {
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "aidid_house.pipelines.AididHousePipeline": 300,
-   # 'aidid_house.pipelines.SaveToMySQLPipeline': 400,
+   'aidid_house.pipelines.SaveToMySQLPipeline': 400,
 }
 
 
