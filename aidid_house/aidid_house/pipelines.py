@@ -58,7 +58,7 @@ class AididHousePipeline:
             adapter['space'] = main_space
 
         if adapter.get('basic_info'):
-            adapter['basic_info'].append(f'house_type: {house_type}')
+            adapter['basic_info'] += f' | house_type: {house_type}'
             adapter['basic_info'] = [item for item in adapter['basic_info'] if item]
 
         if adapter.get('review'):
