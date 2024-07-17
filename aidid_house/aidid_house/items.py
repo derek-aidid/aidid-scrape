@@ -9,6 +9,7 @@ import scrapy
 class AididHouseItem(scrapy.Item):
     # define the fields for your item here like:
     url = scrapy.Field()
+    site = scrapy.Field()
     name = scrapy.Field()
     address = scrapy.Field()
     longitude = scrapy.Field()

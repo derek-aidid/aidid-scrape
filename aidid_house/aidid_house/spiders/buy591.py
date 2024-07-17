@@ -7,7 +7,7 @@ import time
 class Buy591Spider(scrapy.Spider):
     name = "buy591"
     start_urls = ['https://sale.591.com.tw/']
-    region_ids = [1]  # , 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 21, 22, 23, 24, 25
+    region_ids = [1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 17, 19, 21, 22, 23, 24, 25]
     houses_per_page = 30  # Adjust according to the number of houses per page
 
     def parse(self, response):
@@ -29,8 +29,7 @@ class Buy591Spider(scrapy.Spider):
                     headers=headers,
                     meta={'csrf_token': csrf_token, 'region_id': region_id, 'firstRow': 0}
                 )
-        else:
-            self.logger.error('CSRF token not found')
+
 
     def parse_list(self, response):
         json_response = json.loads(response.text)
@@ -61,8 +60,6 @@ class Buy591Spider(scrapy.Spider):
                     headers=response.request.headers,
                     meta={'csrf_token': response.meta['csrf_token'], 'region_id': response.meta['region_id'], 'firstRow': firstRow, 'totalRows': totalRows, }
                 )
-        else:
-            self.logger.error('Failed to fetch data')
 
     def parse_detail(self, response):
         name_list = response.xpath('//h1[@class="detail-title-content"]/text()').getall()
@@ -330,23 +327,24 @@ class Buy591Spider(scrapy.Spider):
 
         item = AididHouseItem(
             url=meta['url'],
+            site='591房屋',
             name=meta['name'],
             address=meta['address'],
-            latitude=float(meta['latitude']),
             longitude=float(meta['longitude']),
+            latitude=float(meta['latitude']),
             city=meta['city'],
             district=meta['district'],
             price=meta['price'],
+            space=meta['space'],
             layout=meta['layout'],
             house_type=meta['house_type'],
-            space=meta['space'],
             floors=meta['floors'],
             community=meta['community'],
             basic_info=' | '.join(meta['basic_info']),
             features=' | '.join(meta['features']),
+            utility_info=utility_info,
+            life_info=meta['life_info'],
             review=meta['review'],
             images=meta['images'],
-            utility_info=utility_info,
-            life_info=meta['life_info']
         )
         yield item

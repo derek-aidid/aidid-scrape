@@ -124,6 +124,7 @@ class BuyxinyiSpider(scrapy.Spider):
 
         item = AididHouseItem(
             url=response.url,
+            site='信義房屋',
             name=name,
             address=address,
             latitude=lat,

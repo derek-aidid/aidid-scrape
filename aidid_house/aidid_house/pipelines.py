@@ -79,6 +79,7 @@ class SaveToMySQLPipeline:
         self.cur.execute(f"""
         CREATE TABLE IF NOT EXISTS {self.table_name} (
             id INT NOT NULL AUTO_INCREMENT,
+            site VARCHAR(255),
             url VARCHAR(255),
             name TEXT,
             address VARCHAR(255),
@@ -104,9 +105,35 @@ class SaveToMySQLPipeline:
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
+
+        # Verify all parameters are present
+        params = (
+            adapter.get('url'),
+            adapter.get('site'),
+            adapter.get('name'),
+            adapter.get('address'),
+            adapter.get('longitude'),
+            adapter.get('latitude'),
+            adapter.get('city'),
+            adapter.get('district'),
+            adapter.get('price'),
+            adapter.get('space'),
+            adapter.get('layout'),
+            adapter.get('house_type'),
+            adapter.get('floors'),
+            adapter.get('community'),
+            json.dumps(adapter.get('basic_info')),
+            json.dumps(adapter.get('features')),
+            adapter.get('life_info'),
+            adapter.get('utility_info'),
+            adapter.get('review'),
+            json.dumps(adapter.get('images'))
+        )
+
         self.cur.execute(f"""
         INSERT INTO {self.table_name} (
             url, 
+            site,
             name, 
             address,
             longitude,
@@ -126,29 +153,9 @@ class SaveToMySQLPipeline:
             review,
             images
         ) VALUES (
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
         )
-        """, (
-            adapter.get('url'),
-            adapter.get('name'),
-            adapter.get('address'),
-            adapter.get('longitude'),
-            adapter.get('latitude'),
-            adapter.get('city'),
-            adapter.get('district'),
-            adapter.get('price'),
-            adapter.get('space'),
-            adapter.get('layout'),
-            adapter.get('house_type'),
-            adapter.get('floors'),
-            adapter.get('community'),
-            json.dumps(adapter.get('basic_info')),
-            json.dumps(adapter.get('features')),
-            adapter.get('life_info'),
-            adapter.get('utility_info'),
-            adapter.get('review'),
-            json.dumps(adapter.get('images'))
-        ))
+        """, params)
 
         self.conn.commit()
 
