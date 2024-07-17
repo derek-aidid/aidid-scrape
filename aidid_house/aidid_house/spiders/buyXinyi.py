@@ -29,7 +29,6 @@ class BuyxinyiSpider(scrapy.Spider):
     kinmen_county = [f"https://www.sinyi.com.tw/buy/list/Kinmen-county/default-desc/{i}" for i in range(1, 7)]
 
     start_urls = taipei_city + new_taipei_city + keelong + yilan_county + hsinchu_city + hsinchu_county + taoyuan_city + miaoli_county + taichung_city + changhua_county + nantou_county + yunlin_county + chiayi_city + chiayi_county + tainan_city + kaohsiung_city + pingtung_county + penghu_county + taitung_county + hualien_county + kinmen_county
-    # start_urls = ["https://www.sinyi.com.tw/buy/list/Taipei-city/default-desc/1"]
 
     def parse(self, response):
         urls = response.xpath('//div[@class="buy-list-item "]/a/@href').getall()
@@ -58,7 +57,6 @@ class BuyxinyiSpider(scrapy.Spider):
         city_district_match = re.search(r'(\w+(?:市|縣))(\w+(?:區|鄉|鎮|市|鄉))', address)
         city = city_district_match.group(1) if city_district_match else '無'
         district = city_district_match.group(2) if city_district_match else '無'
-        address = address.replace(city, '').replace(district, '').strip()
 
         price = ''.join(response.xpath('//div[@class="buy-content-title-total-price"]/text()').getall())
         space = ' '.join(response.xpath('//div[@class="buy-content-detail-area"]/div/div/span/text()').getall())
@@ -92,22 +90,6 @@ class BuyxinyiSpider(scrapy.Spider):
 
         images = response.xpath('//div[@class="carousel-thumbnail-img "]/img/@src').getall()
 
-        for row in neighbor_history_rows:
-            neighbor_data = {
-                "year_month": ''.join(row.xpath('.//div[1]//text()').getall()).strip().split('月')[0] + '月',
-                "address": ''.join(row.xpath('.//div[2]//text()').getall()).strip(),
-                "type_parking": ''.join(row.xpath('.//div[3]//text()').getall()).strip(),
-                "total_price": ''.join(row.xpath('.//div[4]//text()').getall()).strip(),
-                "unit_price": ''.join(row.xpath('.//div[5]//text()').getall()).strip(),
-                "building_area": ''.join(row.xpath('.//div[6]//text()').getall()).strip(),
-                "land_area": ''.join(row.xpath('.//div[7]//text()').getall()).strip(),
-                "age": ''.join(row.xpath('.//div[8]//text()').getall()).strip(),
-                "floor": ''.join(row.xpath('.//div[9]//text()').getall()).strip(),
-                "layout": ''.join(row.xpath('.//div[10]//text()').getall()).strip()
-            }
-            if neighbor_data['address'] != '':
-                neighbor_history.append(neighbor_data)
-
         script_text = response.xpath('//script[contains(text(), "__NEXT_DATA__")]/text()').get()
         json_data = json.loads(re.search(r'__NEXT_DATA__\s*=\s*({.*?});', script_text).group(1))
         lat = json_data['props']['initialReduxState']['buyReducer']['contentData']['latitude']
@@ -116,11 +98,10 @@ class BuyxinyiSpider(scrapy.Spider):
         # Extract lifeInfo data
         life_info = json_data['props']['initialReduxState']['buyReducer']['detailData']['lifeInfo']
 
-        # Flatten and format lifeInfo data
+        # Format lifeInfo data
         life_info_str = ' || '.join(
-            f"type: {info['type']} - " + ' | '.join(
-                f"title: {i['title']}, distance: {i['distance']}, time: {i['time']}, "
-                f"lifeLatitude: {i['lifeLatitude']}, lifeLongitude: {i['lifeLongitude']}"
+            f"{info['type']}: " + ' | '.join(
+                f"{i['title']} (距離: {i['distance']} 公尺, 時間: {i['time']} 秒, lat: {i['lifeLatitude']}, lng: {i['lifeLongitude']})"
                 for i in info['info']
             )
             for info in life_info
@@ -129,21 +110,17 @@ class BuyxinyiSpider(scrapy.Spider):
         # Extract utilitylifeInfo data
         utility_life_info = json_data['props']['initialReduxState']['buyReducer']['detailData']['utilitylifeInfo']
 
-        # Flatten and format utilitylifeInfo data
+        # Format utilitylifeInfo data
         utility_life_info_str = ' || '.join(
-            f"utilityType: {info['utilityType']} - " + ' | '.join(
-                f"utilitySubType: {poi['utilitySubType']}, totalCount: {poi['totalCount']}, " +
-                ' | '.join(
-                    f"title: {p['title']}, distance: {p['distance']}, time: {p['time']}, "
-                    f"poiLatitude: {p['poiLatitude']}, poiLongitude: {p['poiLongitude']}"
+            f"{info['utilityType']}: " + ' | '.join(
+                f"{poi['utilitySubType']} - " + ' | '.join(
+                    f"{p['title']} (距離: {p['distance']} 公尺, 時間: {p['time']} 秒, lat: {p['poiLatitude']}, lng: {p['poiLongitude']})"
                     for p in poi['pois']
                 )
                 for poi in info['poiList']
             )
             for info in utility_life_info
         )
-
-        # Now utility_life_info_str contains the formatted string
 
         item = AididHouseItem(
             url=response.url,
