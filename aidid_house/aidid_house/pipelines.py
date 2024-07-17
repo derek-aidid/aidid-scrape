@@ -102,6 +102,13 @@ class SaveToMySQLPipeline:
             PRIMARY KEY (id)
         )
         """)
+        # Create indexes
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_city_district ON {self.table_name} (city, district);")
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_price ON {self.table_name} (price);")
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_space ON {self.table_name} (space);")
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_layout ON {self.table_name} (layout);")
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_house_type ON {self.table_name} (house_type);")
+        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_community ON {self.table_name} (community);")
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
