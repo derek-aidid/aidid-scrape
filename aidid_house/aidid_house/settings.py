@@ -13,7 +13,7 @@ SCRAPEOPS_API_KEY = '4a151e78-1817-48b6-b496-ec2297a76592'
 # signup at https://scrapeops.io
 SCRAPEOPS_FAKE_USER_AGENT_ENDPOINT = 'https://headers.scrapeops.io/v1/user-agents'
 SCRAPEOPS_FAKE_USER_AGENT_ENABLED = True
-SCRAPEOPS_NUM_RESULTS = 200
+SCRAPEOPS_NUM_RESULTS = 10000
 
 SPIDER_MODULES = ["aidid_house.spiders"]
 NEWSPIDER_MODULE = "aidid_house.spiders"

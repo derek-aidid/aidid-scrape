@@ -17,10 +17,6 @@ class AididHousePipeline:
             if isinstance(value, str):
                 value = re.sub(r'[^\w\s,./|:;?!-]', '', value)
                 value = re.sub(r'(\W)\1{2,}', r'\1', value)
-            elif isinstance(value, list):
-                value = [clean_field(v) for v in value]
-            elif isinstance(value, dict):
-                value = {k: clean_field(v) for k, v in value.items()}
             return value
 
         for field_name, value in adapter.items():
@@ -43,6 +39,7 @@ class AididHousePipeline:
                 years = 0
             house_type = re.sub(r'(\d+\.?\d*年|(\d+)個月)', '', type_info).strip()
             adapter['house_type'] = years
+            adapter['basic_info'] += house_type
 
         if adapter.get('space'):
             space = adapter['space']
@@ -56,10 +53,6 @@ class AididHousePipeline:
                 else:
                     main_space = 0
             adapter['space'] = main_space
-
-        if adapter.get('basic_info'):
-            adapter['basic_info'] += f' | house_type: {house_type}'
-            adapter['basic_info'] = [item for item in adapter['basic_info'] if item]
 
         if adapter.get('review'):
             review = adapter['review']
@@ -89,8 +82,8 @@ class SaveToMySQLPipeline:
             url VARCHAR(255),
             name TEXT,
             address VARCHAR(255),
-            longitude FLOAT,
-            latitude FLOAT,
+            longitude DOUBLE,
+            latitude DOUBLE,
             city VARCHAR(255),
             district VARCHAR(255),
             price INT,
