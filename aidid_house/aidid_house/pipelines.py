@@ -102,13 +102,34 @@ class SaveToMySQLPipeline:
             PRIMARY KEY (id)
         )
         """)
-        # Create indexes
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_city_district ON {self.table_name} (city, district);")
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_price ON {self.table_name} (price);")
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_space ON {self.table_name} (space);")
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_layout ON {self.table_name} (layout);")
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_house_type ON {self.table_name} (house_type);")
-        self.cur.execute(f"CREATE INDEX IF NOT EXISTS idx_community ON {self.table_name} (community);")
+        # List of indexes to create
+        indexes = [
+            ('idx_city_district', ['city', 'district']),
+            ('idx_price', ['price']),
+            ('idx_space', ['space']),
+            ('idx_layout', ['layout']),
+            ('idx_house_type', ['house_type']),
+            ('idx_community', ['community'])
+        ]
+
+# Create indexes if they don't exist
+        for index_name, columns in indexes:
+            check_index_query = f"""
+            SELECT COUNT(1) 
+            FROM INFORMATION_SCHEMA.STATISTICS 
+            WHERE table_schema = DATABASE() 
+              AND table_name = '{self.table_name}' 
+              AND index_name = '{index_name}';
+            """
+            self.cur.execute(check_index_query)
+            index_exists = self.cur.fetchone()[0]
+            if not index_exists:
+                columns_str = ', '.join(columns)
+                create_index_query = f"CREATE INDEX {index_name} ON {self.table_name} ({columns_str});"
+                self.cur.execute(create_index_query)
+
+        # Commit the changes
+        self.conn.commit()
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
