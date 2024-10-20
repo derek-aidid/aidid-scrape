@@ -28,7 +28,7 @@ class BuyHBSpider(scrapy.Spider):
                     callback=self.parse_page,
                     meta={'page_number': page_number}
                 )
-                page_number += 1
+                
             except Exception as e:
                 self.logger.error(f"An error occurred: {e}")
                 break
