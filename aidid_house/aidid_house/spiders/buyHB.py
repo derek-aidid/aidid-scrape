@@ -11,14 +11,13 @@ class BuyHBSpider(scrapy.Spider):
     def parse(self, response):
         url = 'https://www.hbhousing.com.tw/ajax/dataService.aspx?job=search&path=house&kv=false'
 
-        page_number = 1
-        while True:
+        for page_number in range(1, 6000):
             try:
                 payload = {
                     'job': 'search',
                     'path': 'house',
                     'kv': 'false',
-                    'q': f'2^1^3^^^P^^^^^^^^^^^^^9^1^{page_number}^0',
+                    'q': f'2^1^^^^P^1_9^^^^^^^^^^^^9^^{page_number}^0',
                     'rlg': '0'
                 }
 
@@ -40,18 +39,14 @@ class BuyHBSpider(scrapy.Spider):
             # Assuming the response is JSON-like, parse it
             data = json.loads(response.text)
 
-            # # Debug: print out the entire response
-            # self.logger.info(json.dumps(data, indent=2))
-
             # Extract specific fields
             houses = data.get('data')  # Adjust this line based on actual response structure
             if houses:
                 for house in houses:
-
                     case_id = house.get('s')
                     case_url = f'https://www.hbhousing.com.tw/detail/?sn={case_id}'
                     images = [f'https:{img}' for img in house.get('i', [])]
-
+                    self.logger.info(f'Parsing {case_id}')
                     yield scrapy.Request(
                         url=case_url,
                         callback=self.parse_case_page,
