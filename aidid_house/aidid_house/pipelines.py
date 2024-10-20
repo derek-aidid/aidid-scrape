@@ -20,7 +20,8 @@ class AididHousePipeline:
             return value
 
         for field_name, value in adapter.items():
-            adapter[field_name] = clean_field(value)
+            if field_name != 'url':
+                adapter[field_name] = clean_field(value)
 
         if adapter.get('price'):
             price = adapter['price']
