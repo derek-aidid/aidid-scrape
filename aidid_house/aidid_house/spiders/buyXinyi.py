@@ -47,7 +47,7 @@ class BuyxinyiSpider(scrapy.Spider):
         # Create a set of the first two characters of each city name
         city_substrings = {city[:2] for city in city_names}
 
-        # Remove any city substrings from the name
+        # Remove any city substrings from the name0
         for substring in city_substrings:
             if substring in name:
                 name = name.replace(substring, '').strip()
@@ -122,9 +122,15 @@ class BuyxinyiSpider(scrapy.Spider):
             for info in utility_life_info
         )
 
+        site = '信義房屋'
+
+        if response.xpath('//span[@class="buy-content-sameTrade"]/text()').get() == '非信義物件':
+            source = response.xpath('//div[@class="buy-content-store-title"]/text()').get()
+            site = '信義房屋' + '(' + source + ')'
+
         item = AididHouseItem(
             url=response.url,
-            site='信義房屋',
+            site=site,
             name=name,
             address=address,
             latitude=lat,
